@@ -2,5 +2,11 @@ aqicn
 =====
 
 Scraper for aqicn.org
+Written in Python 3.4
 
-Uses [JSON.lua](http://regex.info/blog/lua/json) by Jeffrey Friedl.
+Uses PyPi Versions of
+
+[Requests](http://docs.python-requests.org/en/latest/)
+
+
+[BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/)
