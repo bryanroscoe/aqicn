@@ -1,5 +1,6 @@
 #!/usr/bin/python
-
+#Author:Bryan Roscoe
+#https://github.com/bryanroscoe/aqicn
 import json
 import urllib.request
 import re
@@ -55,10 +56,6 @@ cityPopupUrls = []
 for i, city in enumerate(cities):
     
     city['dateTime'] = getTime(city['utime'], str(city['g'][1]))
-
-    ##Remove this line to scrape all cities
-    if (i+1)%500 !=0:
-        continue
     
     print("Scraping "+ city["city"] , i+1, "of",len(cities), city["g"])
     #Get the details url from the 

@@ -4,9 +4,8 @@ aqicn
 
 ####How To use
 
-Data will stored like this
-[directory]/Data/AQICN/Variable/YYYY/MM/yyyymmdd-variable.csv
-You can change the base [directory] by editing the script. The variable is at the top.
+Data will stored like [directory]/Data/AQICN/Variable/YYYY/MM/yyyymmdd-variable.csv You can change the base [directory] by editing the script. 
+The variable is at the top of the script.
 
 
 
@@ -15,8 +14,10 @@ You can change the base [directory] by editing the script. The variable is at th
 ####Libraries
 Uses [PyPi](https://pypi.python.org/pypi) Versions of
 
-* [Requests](http://docs.python-requests.org/en/latest/)
-* [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/)
+* [Requests2.2.1:](http://docs.python-requests.org/en/latest/)
+pip install requests
+* [BeautifulSoup4.3.2:](http://www.crummy.com/software/BeautifulSoup/)
+pip install beautifulsoup4
 
 
 ###Developed in Eclipse
