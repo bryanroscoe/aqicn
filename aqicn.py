@@ -29,12 +29,26 @@ def getTime(utime, long):
     cityDateTime = curDateTime.replace(hour=cityTime.tm_hour, minute=cityTime.tm_min)
     diffDays = curDateTime.weekday() -cityTime.tm_wday
     
-    
     if diffDays > 0:
         cityDateTime += datetime.timedelta(days=-diffDays)
     elif diffDays < 0:
         cityDateTime += datetime.timedelta(days=diffDays)
     return cityDateTime
+    
+def writeData(name, city):
+        shortName = name[4:]
+        curFilename = directory + '/' +'Data/AQICN/' + str(shortName) + "/"
+        curFilename += city['dateTime'].strftime("%Y/%m/%d/")
+        curFilename += city['dateTime'].strftime("%Y%m%d")
+        curFilename += str(shortName) + ".csv"
+        ensureDir(curFilename)
+        f = open(curFilename, 'a')
+        f.write(city['dateTime'].strftime("%Y%m%d%H%M") + ",")
+        f.write(str(city['g'][0]) + ",")
+        f.write(str(city['g'][1]) + ",")
+        f.write(str(city['data'][name]) + "\n")
+        f.close()    
+    
     
 #First we must get the main map page
 print("Getting the main page")
@@ -93,25 +107,18 @@ for i, city in enumerate(cities):
         savedVars = ""
         for cur in curList:
             curId = cur['id']
-            curIdStripped = curId[4:]
-            savedVars += curIdStripped + ","
+            savedVars += curId + ","
             curDiv = cur.find('div')
             if not curDiv:
                 continue
             city['data'][curId] = curDiv.contents[0]
-            curFilename = directory + '/' +'Data/AQICN/' + str(curIdStripped) + "/"
-            curFilename += city['dateTime'].strftime("%Y/%m/%d/")
-            curFilename += city['dateTime'].strftime("%Y%m%d")
-            curFilename += str(curIdStripped) + ".csv"
-            ensureDir(curFilename)
-            f = open(curFilename, 'a')
-            f.write(city['dateTime'].strftime("%Y%m%d%H%M") + ",")
-            f.write(str(city['g'][0]) + ",")
-            f.write(str(city['g'][1]) + ",")
-            f.write(str(city['data'][curId]) + "\n")
-            f.close()
-        print("Saved", savedVars, "for city", city['city'])
-            
+            writeData(curId, city)
+        
+        city['data']['cur_aqi'] = city['aqi'];
+        writeData('cur_aqi', city)
+        
+        print("Saved", savedVars + "aqi", "for city", city['city'])
+        print(city)
             
 
     else:
