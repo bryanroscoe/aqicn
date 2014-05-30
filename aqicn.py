@@ -2,7 +2,7 @@
 #Author:Bryan Roscoe
 #https://github.com/bryanroscoe/aqicn
 import json
-import urllib.request
+import sys
 import re
 from builtins import len
 import requests
@@ -11,6 +11,11 @@ import time
 import datetime
 import os
 from math import ceil
+import traceback
+import gc
+
+#
+#from memory_profiler import profile
 
 directory= "./"
 
@@ -34,7 +39,7 @@ def getTime(utime, long):
     elif diffDays < 0:
         cityDateTime += datetime.timedelta(days=diffDays)
     return cityDateTime
-    
+
 def writeData(name, city):
         shortName = name[4:]
         curFilename = directory + '/' +'Data/AQICN/' + str(shortName) + "/"
@@ -48,81 +53,95 @@ def writeData(name, city):
         f.write(str(city['g'][1]) + ",")
         f.write(str(city['data'][name]) + "\n")
         f.close()    
-    
-    
-#First we must get the main map page
-print("Getting the main page")
-fullMap = urllib.request.urlopen("http://aqicn.org/map/world/")
-fullMap = fullMap.read().decode("utf-8")
-
-#Find the json embedded in the main page
-print("Finding the json")
-fullMapJsonString = re.search("(?<=mapInitWithData\()\[.*\](?=\))", fullMap)
-
-#Parse the json
-cities = None
-if fullMapJsonString:
-    cities = json.loads(fullMapJsonString.group(0))
-
-#Loop through the cities and load each one
-print("There are" ,len(cities) , "cities")
-cityPopupUrls = []
-for i, city in enumerate(cities):
-    
-    city['dateTime'] = getTime(city['utime'], str(city['g'][1]))
-    
-    print("Scraping "+ city["city"] , i+1, "of",len(cities), city["g"])
-    #Get the details url from the 
-    city["popupURL"]=("http://aqicn.info/json/mapinfo/@" + str(city["x"]))
-    cityDetailPage= urllib.request.urlopen(city["popupURL"]).read().decode("utf-8")
-    city["detailURL"] = re.search("http://aqicn\.info/[^\']*", cityDetailPage)
-    
-    if city["detailURL"]:
-        #Load the detail page and get the redirect page
-        city["detailURL"] = city["detailURL"].group(0).replace("info", "org", 1)
+#@profile
+def handleCity(i, city, cities):
+    try:
+        city['dateTime'] = getTime(city['utime'], str(city['g'][1]))
+        print("Scraping "+ city["city"] , i+1, "of",len(cities), city["g"], city["x"])
+        #Get the details url from the popup
+        city["popupURL"]=("http://aqicn.info/json/mapinfo/@" + str(city["x"]))
+        cityDetailPage = requests.get(city["popupURL"]).text
+        city["detailURL"] = re.search("http://aqicn\.info/[^\']*", cityDetailPage)
         
-        headers = {
-                'User-agent': 'Mozilla/5.0'
-        }
-        
-        page = requests.get(city["detailURL"],allow_redirects=False, headers=headers)
-        
-        #Attempt to get the redirect page. If that fails we will assume the page the did not redirect and scrapte the url
-        if page.headers.get('location'):
-            page = requests.get(page.headers.get('location') + "m",allow_redirects=True, headers=headers)
-        else:
+        if city["detailURL"]:
+            #Load the detail page and get the redirect page
+            city["detailURL"] = city["detailURL"].group(0).replace("info", "org", 1)
+            
+            headers = {
+                    'User-agent': 'Mozilla/5.0'
+            }
+            
+            page = requests.get(city["detailURL"],allow_redirects=False, headers=headers)
+            
+            #Attempt to get the redirect page. If that fails we will assume the page the did not redirect and scrapte the url
+            if page.headers.get('location'):
+                page = requests.get(page.headers.get('location') + "m",allow_redirects=True, headers=headers)
+            else:
+                soup = BeautifulSoup(page.text)
+                titleLink = soup.find(id="aqiwgttitle1")
+                if titleLink:
+                    page = requests.get(titleLink['href'] + "m",allow_redirects=True, headers=headers)
+            
             soup = BeautifulSoup(page.text)
-            titleLink = soup.find(id="aqiwgttitle1")
-            if titleLink:
-                page = requests.get(titleLink['href'] + "m",allow_redirects=True, headers=headers)
+            city["data"] = {}
+            curList = soup.find_all("td", {"id" : re.compile('^cur_')})
+            #Go on to the next city if we don't find anything
+            if not curList:
+                print("Nothing found for", city['city'])
+                return
+            #Loop through all the variables for this city
+            savedVars = ""
+            for cur in curList:
+                curId = cur['id']
+                savedVars += curId + ","
+                curDiv = cur.find('div')
+                if not curDiv:
+                    continue
+                city['data'][curId] = curDiv.contents[0]
+                writeData(curId, city)
+            
+            city['data']['cur_aqi'] = city['aqi'];
+            writeData('cur_aqi', city)
+            
+            print("Saved", savedVars + "aqi", "for city", city['city'])
+            del soup
+            del city
+            cities[i] = None
+            gc.collect()
+                
         
-        soup = BeautifulSoup(page.text)
-        city["data"] = {}
-        curList = soup.find_all("td", {"id" : re.compile('^cur_')})
-        #Go on to the next city if we don't find anything
-        if not curList:
-            print("Nothing found for", city['city'])
-            continue
-        #Loop through all the variables for this city
-        savedVars = ""
-        for cur in curList:
-            curId = cur['id']
-            savedVars += curId + ","
-            curDiv = cur.find('div')
-            if not curDiv:
-                continue
-            city['data'][curId] = curDiv.contents[0]
-            writeData(curId, city)
-        
-        city['data']['cur_aqi'] = city['aqi'];
-        writeData('cur_aqi', city)
-        
-        print("Saved", savedVars + "aqi", "for city", city['city'])
-        print(city)
+        else:
+            print('Not found')
+    except KeyboardInterrupt:
+        sys.exit()
+    except:
+
+        print(city["city"], "encountered an error:", traceback.format_exc() )
             
 
-    else:
-        print('Not found')
+def getCities():
+    #First we must get the main map page
+    print("Getting the main page")
+    fullMap = requests.get("http://aqicn.org/map/world/").text
+    #fullMap = urllib.request.urlopen("http://aqicn.org/map/world/")
+    #fullMap = fullMap.read().decode("utf-8")
+    
+    #Find the json embedded in the main page
+    print("Finding the json")
+    fullMapJsonString = re.search("(?<=mapInitWithData\()\[.*\](?=\))", fullMap)
+    
+    #Parse the json
+    cities = None
+    if fullMapJsonString:
+        cities = json.loads(fullMapJsonString.group(0))
+    
+    #Loop through the cities and load each one
+    print("There are" ,len(cities) , "cities")
+    for i, city in enumerate(cities):
+        #if i%500 != 0:
+        #    continue
+        handleCity(i, city, cities)
         
-
-
+if __name__ == '__main__':
+    getCities()
+    
