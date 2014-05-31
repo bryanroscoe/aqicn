@@ -4,10 +4,29 @@ aqicn
 
 ####How To use
 
-Data will stored like [directory]/Data/AQICN/Variable/YYYY/MM/yyyymmdd-variable.csv You can change the base [directory] by editing the script. 
-The variable is at the top of the script.
+Just install the needed libraries below and python 3.4 and you are good to go.
 
+If you UnicodeException you made need to set the enviroment variable PYTHONIOENCODING to utf-8
 
+####Output
+
+#####Console
+It should look like this
+```
+Getting the main page
+Finding the json
+There are 3181 cities
+Scraping Weifang () 1 of 3181 ['36.706774', '119.161756'] 1510
+Saved cur_pm25,cur_pm10,cur_o3,cur_no2,cur_so2,cur_co,aqi for city Weifang ()
+```
+
+Errors will be printed as they occur. Sometimes unicodee handling in python has some issues.
+#####Files
+Files will be saved to
+
+[directory]/Data/AQICN/Variable/YYYY/MM/yyyymmdd-variable.csv
+
+You can change the base [directory] by editing the script. 
 
 ###Written in [Python 3.4](https://www.python.org/downloads/release/python-34/)
 
