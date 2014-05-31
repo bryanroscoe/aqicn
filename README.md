@@ -4,9 +4,9 @@ aqicn
 
 ####How To use
 
-Just install the needed libraries below and python 3.4 and you are good to go.
+Just install the needed libraries below and Python 3.4 and you are good to go.
 
-If you UnicodeException you made need to set the enviroment variable PYTHONIOENCODING to utf-8
+If you UnicodeException you made need to set the environment variable PYTHONIOENCODING to utf-8
 
 ####Output
 
@@ -20,7 +20,7 @@ Scraping Weifang () 1 of 3181 ['36.706774', '119.161756'] 1510
 Saved cur_pm25,cur_pm10,cur_o3,cur_no2,cur_so2,cur_co,aqi for city Weifang ()
 ```
 
-Errors will be printed as they occur. Sometimes unicodee handling in python has some issues.
+Errors will be printed as they occur. Sometimes unicode handling in Python has some issues.
 #####Files
 Files will be saved to
 
