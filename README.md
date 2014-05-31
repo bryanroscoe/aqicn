@@ -2,11 +2,12 @@ aqicn
 =====
 #####Scraper for aqicn.org
 
-####How To use
+####Install
 
-Just install the needed libraries below and Python 3.4 and you are good to go.
-
-If you UnicodeException you made need to set the environment variable PYTHONIOENCODING to utf-8
+1. Make sure you have Python 3.4 installed.
+2. Install the required libraries using pip (see below for libraries)
+3. Setup the output directory inside the script
+4. Run the script aqicn.py
 
 ####Output
 
@@ -26,7 +27,11 @@ Files will be saved to
 
 [directory]/Data/AQICN/Variable/YYYY/MM/yyyymmdd-variable.csv
 
-You can change the base [directory] by editing the script. 
+You can change the base [directory] by editing the script. It is defaulted to "./"
+
+####Troubleshooting
+
+If you UnicodeException you made need to set the enviroment variable PYTHONIOENCODING to utf-8
 
 ###Written in [Python 3.4](https://www.python.org/downloads/release/python-34/)
 
@@ -38,6 +43,7 @@ pip install requests
 * [BeautifulSoup4.3.2:](http://www.crummy.com/software/BeautifulSoup/)
 pip install beautifulsoup4
 
+Just run the command after the colon to install them with pip. pip is installed with Python 3.4
 
 ###Developed in Eclipse
 ####Eclipse Plugins
