@@ -4,10 +4,34 @@ aqicn
 
 ####Install
 
-1. Make sure you have Python 3.4 installed.
+#####OS X:
+
+1. Install from [Python 3.4](https://www.python.org/downloads/release/python-341/)
 2. Install the required libraries using pip (see below for libraries)
+3. Download [aqicn.py](https://github.com/bryanroscoe/aqicn/blob/master/aqicn.py)
 3. Setup the output directory inside the script
-4. Run the script aqicn.py
+4. run the script aqicn.py (you may need to chmod +x)
+
+#####Cent OS:
+* You must download and compile Python 3.4
+
+Follow this guide
+http://toomuchdata.com/2014/02/16/how-to-install-python-on-centos/
+```
+wget https://www.python.org/ftp/python/3.4.1/Python-3.4.1.tgz --no-check-certificate
+tar -xzvf Python-3.4.1.tgz
+cd Python-3.4.1
+yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel
+./configure --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
+make && sudo make altinstall
+#PyPi will be installed at /usr/local/bin/pip3.4
+sudo /usr/local/bin/pip3.4 install requests
+sudo /usr/local/bin/pip3.4 install beautifulsoup4
+```
+* Download [aqicn.py](https://github.com/bryanroscoe/aqicn/blob/master/aqicn.py)
+* Setup the output directory inside the script
+* run the script aqicn.py (you may need to chmod +x)
+* change the script to look use the python /usr/local/bin/python3.4 instaed of /usr/bin/python
 
 ####Output
 
@@ -33,7 +57,7 @@ You can change the base [directory] by editing the script. It is defaulted to ".
 
 If you UnicodeException you made need to set the enviroment variable PYTHONIOENCODING to utf-8
 
-###Written in [Python 3.4](https://www.python.org/downloads/release/python-34/)
+###Written in [Python 3.4](https://www.python.org/downloads/release/python-341/)
 
 ####Libraries
 Uses [PyPi](https://pypi.python.org/pypi) Versions of
