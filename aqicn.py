@@ -48,7 +48,10 @@ def writeData(name, city):
         curFilename += str(shortName) + ".csv"
         ensureDir(curFilename)
         f = open(curFilename, 'a')
-        f.write(city['dateTime'].strftime("%Y%m%d%H%M") + ",")
+        if name == "cur_aqi":
+            f.write(city['dateTime'].strftime("%Y%m%d%H%M") + ",")
+        else:
+            f.write(city['dateTimeUpdated'].strftime("%Y%m%d%H%M") + ",")
         f.write(str(city['g'][0]) + ",")
         f.write(str(city['g'][1]) + ",")
         f.write(str(city['data'][name]) + "\n")
@@ -84,6 +87,9 @@ def handleCity(i, city, cities):
             
             soup = BeautifulSoup(page.text)
             city["data"] = {}
+
+            newTime = re.search( "(?<=Updated on ).*$",soup.find(text=re.compile("(?<=Updated on ).*?"))).group(0)
+            city['dateTimeUpdated'] = getTime(newTime, str(city['g'][1]))
             curList = soup.find_all("td", {"id" : re.compile('^cur_')})
             #Go on to the next city if we don't find anything
             if not curList:
@@ -106,6 +112,7 @@ def handleCity(i, city, cities):
             print("Saved", savedVars + "aqi", "for city", city['city'])
             del soup
             del city
+            del curList
             cities[i] = None
             gc.collect()
                 
