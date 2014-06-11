@@ -13,6 +13,7 @@ import os
 from math import ceil
 import traceback
 import gc
+from symbol import except_clause
 
 #
 #from memory_profiler import profile
@@ -26,7 +27,11 @@ def ensureDir(f):
         os.makedirs(d)
 
 def getTime(utime, long):
-    cityTime = time.strptime(utime, "%A %H:%M")
+    try:
+        cityTime = time.strptime(utime, "%A %H:%M")
+    except ValueError:
+        utime= utime.replace(".", "")
+        cityTime = time.strptime(utime, "%a %H:%M")
     
     curDateTime = datetime.datetime.utcnow()
 
