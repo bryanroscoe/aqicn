@@ -155,5 +155,7 @@ def getCities():
         handleCity(i, city, cities)
         
 if __name__ == '__main__':
+    print("Start" ,datetime.datetime.now())
     getCities()
+    print("End" ,datetime.datetime.now())
     
