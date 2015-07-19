@@ -26,7 +26,7 @@ def ensureDir(f):
 
 def getTime(utime, long):
     print("Stripping time:", utime);
-    utime = re.sub(r"^on |\.|-", "", utime)
+    utime = re.sub(r"on |\.|-", "", utime)
     print("Trying to parse time:", utime);
     cityTime = parse(utime);
 
@@ -66,17 +66,18 @@ def handleCity(i, city, cities):
         #Get the details url from the popup
         city["popupURL"]=("http://aqicn.info/json/mapinfo/@" + str(city["x"]))
 
-        print(city["popupURL"])
+        print("Popup url is:", city["popupURL"])
 
         cityDetailPage = requests.get(city["popupURL"]).text
         city["detailURL"] = re.search("http://aqicn\.info/[^\']*", cityDetailPage)
 
-        print(city["detailURL"])
+        print("City Detail url is:", city["detailURL"])
 
         if city["detailURL"]:
             #Load the detail page and get the redirect page
             city["detailURL"] = city["detailURL"].group(0).replace("info", "org", 1)
 
+            print("City Detail url is now:", city["detailURL"])
             headers = {
                     'User-agent': 'Mozilla/5.0'
             }
@@ -85,7 +86,8 @@ def handleCity(i, city, cities):
 
             #Attempt to get the redirect page. If that fails we will assume the page the did not redirect and scrapte the url
             if page.headers.get('location'):
-                page = requests.get(page.headers.get('location') + "m",allow_redirects=True, headers=headers)
+                print("Redirecting to:", page.headers.get('location'));
+                page = requests.get(page.headers.get('location'),allow_redirects=True, headers=headers)
             else:
                 soup = BeautifulSoup(page.text)
                 titleLink = soup.find(id="aqiwgttitle1")
