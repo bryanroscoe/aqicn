@@ -27,6 +27,7 @@ make && sudo make altinstall
 #PyPi will be installed at /usr/local/bin/pip3.4
 sudo /usr/local/bin/pip3.4 install requests
 sudo /usr/local/bin/pip3.4 install beautifulsoup4
+sudo /usr/local/bin/pip3.4 install python-dateutil
 ```
 * Download [aqicn.py](https://github.com/bryanroscoe/aqicn/blob/master/aqicn.py)
 * Setup the output directory inside the script
@@ -66,6 +67,8 @@ Uses [PyPi](https://pypi.python.org/pypi) Versions of
 pip install requests
 * [BeautifulSoup4.3.2:](http://www.crummy.com/software/BeautifulSoup/)
 pip install beautifulsoup4
+* [python-dateutil:](http://labix.org/python-dateutil)
+pip install python-dateutil
 
 Just run the command after the colon to install them with pip. pip is installed with Python 3.4
 
