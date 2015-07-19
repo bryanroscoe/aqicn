@@ -25,22 +25,32 @@ def ensureDir(f):
         os.makedirs(d)
 
 def getTime(utime, long):
-    print("Stripping time:", utime);
+    print("Stripping time:", utime, ",", long);
+    utime = utime.strip()
     utime = re.sub(r"on |\.|-", "", utime)
     print("Trying to parse time:", utime);
-    cityTime = parse(utime);
+    try:
+        cityTime = parse(utime);
+    except:
+        utime = re.sub(r"am$|pm$", "", utime)
+        cityTime = parse(utime);
+
+    print("Time parsed as:", cityTime);
 
     curDateTime = datetime.datetime.utcnow()
 
     curDateTime += datetime.timedelta(hours=ceil(float(long)/15))
     cityDateTime = curDateTime.replace(hour=cityTime.hour, minute=cityTime.minute)
     diffDays = curDateTime.weekday() -cityTime.weekday()
-
+    print("Current UTC:", curDateTime);
+    print("Days different", diffDays);
     if diffDays > 0:
         cityDateTime += datetime.timedelta(days=-diffDays)
     elif diffDays < 0:
-        cityDateTime += datetime.timedelta(days=diffDays)
+        cityDateTime += datetime.timedelta(days=-(7+diffDays))
+    print('Edited time is:', cityDateTime);
     return cityDateTime
+
 
 def writeData(name, city):
         shortName = name[4:]
@@ -61,8 +71,8 @@ def writeData(name, city):
 #@profile
 def handleCity(i, city, cities):
     try:
+        print("\n\nScraping "+ city["city"] , i+1, "of",len(cities), city["g"], city["x"])
         city['dateTime'] = getTime(city['utime'], str(city['g'][1]))
-        print("Scraping "+ city["city"] , i+1, "of",len(cities), city["g"], city["x"])
         #Get the details url from the popup
         city["popupURL"]=("http://aqicn.info/json/mapinfo/@" + str(city["x"]))
 
@@ -109,13 +119,10 @@ def handleCity(i, city, cities):
             for cur in curList:
                 curId = cur['id']
                 savedVars += curId + ","
-                curDiv = cur.find('div')
-                if not curDiv:
-                    continue
-                city['data'][curId] = curDiv.contents[0]
+                city['data'][curId] = cur.contents[0]
                 writeData(curId, city)
 
-            city['data']['cur_aqi'] = city['aqi'];
+            city['data']['cur_aqi'] = city['aqi']
             writeData('cur_aqi', city)
 
             print("Saved", savedVars + "aqi", "for city", city['city'])
