@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3.4
 #Author:Bryan Roscoe
 #https://github.com/bryanroscoe/aqicn
 import json
@@ -14,11 +14,12 @@ from math import ceil
 import traceback
 import gc
 from symbol import except_clause
+from dateutil.parser import parse
 
 #
 #from memory_profiler import profile
 
-directory= "./"
+directory= "/home/teamlary/aqicn"
 
 #Function to make sure a directory exists
 def ensureDir(f):
@@ -27,18 +28,24 @@ def ensureDir(f):
         os.makedirs(d)
 
 def getTime(utime, long):
-    try:
-        cityTime = time.strptime(utime, "%A %H:%M")
-    except ValueError:
-        utime= utime.replace(".", "")
-        cityTime = time.strptime(utime, "%a %H:%M")
-    
+
+    print("Trying to parse", utime);
+    utime= utime.replace(".", "")
+    utime= utime.replace("-", "")
+    cityTime = parse(utime);
+    #try:
+    #    cityTime = time.strptime(utime, "%A %H:%M")
+    #except ValueError:
+    #    utime= utime.replace(".", "")
+    #    #cityTime = time.strptime(utime, "%a %H:%M")
+    #    cityTime = parse(utime);
+
     curDateTime = datetime.datetime.utcnow()
 
     curDateTime += datetime.timedelta(hours=ceil(float(long)/15))
-    cityDateTime = curDateTime.replace(hour=cityTime.tm_hour, minute=cityTime.tm_min)
-    diffDays = curDateTime.weekday() -cityTime.tm_wday
-    
+    cityDateTime = curDateTime.replace(hour=cityTime.hour, minute=cityTime.minute)
+    diffDays = curDateTime.weekday() -cityTime.weekday()
+
     if diffDays > 0:
         cityDateTime += datetime.timedelta(days=-diffDays)
     elif diffDays < 0:
@@ -60,7 +67,7 @@ def writeData(name, city):
         f.write(str(city['g'][0]) + ",")
         f.write(str(city['g'][1]) + ",")
         f.write(str(city['data'][name]) + "\n")
-        f.close()    
+        f.close()
 #@profile
 def handleCity(i, city, cities):
     try:
@@ -68,19 +75,24 @@ def handleCity(i, city, cities):
         print("Scraping "+ city["city"] , i+1, "of",len(cities), city["g"], city["x"])
         #Get the details url from the popup
         city["popupURL"]=("http://aqicn.info/json/mapinfo/@" + str(city["x"]))
+
+        print(city["popupURL"])
+
         cityDetailPage = requests.get(city["popupURL"]).text
         city["detailURL"] = re.search("http://aqicn\.info/[^\']*", cityDetailPage)
-        
+
+        print(city["detailURL"])
+
         if city["detailURL"]:
             #Load the detail page and get the redirect page
             city["detailURL"] = city["detailURL"].group(0).replace("info", "org", 1)
-            
+
             headers = {
                     'User-agent': 'Mozilla/5.0'
             }
-            
+
             page = requests.get(city["detailURL"],allow_redirects=False, headers=headers)
-            
+
             #Attempt to get the redirect page. If that fails we will assume the page the did not redirect and scrapte the url
             if page.headers.get('location'):
                 page = requests.get(page.headers.get('location') + "m",allow_redirects=True, headers=headers)
@@ -89,7 +101,7 @@ def handleCity(i, city, cities):
                 titleLink = soup.find(id="aqiwgttitle1")
                 if titleLink:
                     page = requests.get(titleLink['href'] + "m",allow_redirects=True, headers=headers)
-            
+
             soup = BeautifulSoup(page.text)
             city["data"] = {}
 
@@ -110,18 +122,18 @@ def handleCity(i, city, cities):
                     continue
                 city['data'][curId] = curDiv.contents[0]
                 writeData(curId, city)
-            
+
             city['data']['cur_aqi'] = city['aqi'];
             writeData('cur_aqi', city)
-            
+
             print("Saved", savedVars + "aqi", "for city", city['city'])
             del soup
             del city
             del curList
             cities[i] = None
             gc.collect()
-                
-        
+
+
         else:
             print('Not found')
     except KeyboardInterrupt:
@@ -129,7 +141,7 @@ def handleCity(i, city, cities):
     except:
 
         print(city["city"], "encountered an error:", traceback.format_exc() )
-            
+
 
 def getCities():
     #First we must get the main map page
@@ -137,25 +149,24 @@ def getCities():
     fullMap = requests.get("http://aqicn.org/map/world/").text
     #fullMap = urllib.request.urlopen("http://aqicn.org/map/world/")
     #fullMap = fullMap.read().decode("utf-8")
-    
+
     #Find the json embedded in the main page
     print("Finding the json")
     fullMapJsonString = re.search("(?<=mapInitWithData\()\[.*\](?=\))", fullMap)
-    
+
     #Parse the json
     cities = None
     if fullMapJsonString:
         cities = json.loads(fullMapJsonString.group(0))
-    
+
     #Loop through the cities and load each one
     print("There are" ,len(cities) , "cities")
     for i, city in enumerate(cities):
         #if i%500 != 0:
         #    continue
         handleCity(i, city, cities)
-        
+
 if __name__ == '__main__':
     print("Start" ,datetime.datetime.now())
     getCities()
     print("End" ,datetime.datetime.now())
-    
