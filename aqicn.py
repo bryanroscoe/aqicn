@@ -16,9 +16,6 @@ import gc
 from symbol import except_clause
 from dateutil.parser import parse
 
-#
-#from memory_profiler import profile
-
 directory= "/home/teamlary/aqicn"
 
 #Function to make sure a directory exists
@@ -28,17 +25,10 @@ def ensureDir(f):
         os.makedirs(d)
 
 def getTime(utime, long):
-
-    print("Trying to parse", utime);
-    utime= utime.replace(".", "")
-    utime= utime.replace("-", "")
+    print("Stripping time:", utime);
+    utime = re.sub(r"^on |\.|-", "", utime)
+    print("Trying to parse time:", utime);
     cityTime = parse(utime);
-    #try:
-    #    cityTime = time.strptime(utime, "%A %H:%M")
-    #except ValueError:
-    #    utime= utime.replace(".", "")
-    #    #cityTime = time.strptime(utime, "%a %H:%M")
-    #    cityTime = parse(utime);
 
     curDateTime = datetime.datetime.utcnow()
 
