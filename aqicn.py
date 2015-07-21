@@ -28,7 +28,7 @@ def getTime(city):
     print("Stripping time:", utime, ",", long);
     utime = utime.strip()
     utime = re.sub(r"on |\.|-", "", utime)
-    utime = utime + city["tz"]
+    utime = utime + " " + city["tz"]
     print("Trying to parse time:", utime);
     try:
         cityTime = parse(utime).astimezone(tzutc());
