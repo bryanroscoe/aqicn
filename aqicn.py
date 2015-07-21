@@ -56,8 +56,8 @@ def writeData(name, city):
 
 def handleCity(i, city, cities):
     try:
-        city = getUpdatedCity(city);
         print("\n\nScraping "+ city["city"] , i+1, "of",len(cities), city["g"], city["x"])
+        city = getUpdatedCity(city);
         city['dateTime'] = getTime(city)
         #Get the details url from the popup
         city["popupURL"]=("http://aqicn.org/aqicn/json/mapinfo/@" + str(city["x"]))
