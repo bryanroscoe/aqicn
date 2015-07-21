@@ -7,14 +7,12 @@ import re
 from builtins import len
 import requests
 from bs4 import BeautifulSoup
-import time
 import datetime
 import os
-from math import ceil
 import traceback
 import gc
-from symbol import except_clause
 from dateutil.parser import parse
+from dateutil.tz import tzutc
 
 directory= "/home/teamlary/aqicn"
 
@@ -24,32 +22,22 @@ def ensureDir(f):
     if not os.path.exists(d):
         os.makedirs(d)
 
-def getTime(utime, long):
+def getTime(city):
+    long = str(city['g'][1])
+    utime = city["utime"] 
     print("Stripping time:", utime, ",", long);
     utime = utime.strip()
     utime = re.sub(r"on |\.|-", "", utime)
+    utime = utime + city["tz"]
     print("Trying to parse time:", utime);
     try:
-        cityTime = parse(utime);
+        cityTime = parse(utime).astimezone(tzutc());
     except:
         utime = re.sub(r"am$|pm$", "", utime)
-        cityTime = parse(utime);
+        cityTime = parse(utime).astimezone(tzutc());
 
     print("Time parsed as:", cityTime);
-
-    curDateTime = datetime.datetime.utcnow()
-
-    curDateTime += datetime.timedelta(hours=ceil(float(long)/15))
-    cityDateTime = curDateTime.replace(hour=cityTime.hour, minute=cityTime.minute)
-    diffDays = curDateTime.weekday() -cityTime.weekday()
-    print("Current UTC:", curDateTime);
-    print("Days different", diffDays);
-    if diffDays > 0:
-        cityDateTime += datetime.timedelta(days=-diffDays)
-    elif diffDays < 0:
-        cityDateTime += datetime.timedelta(days=-(7+diffDays))
-    print('Edited time is:', cityDateTime);
-    return cityDateTime
+    return cityTime
 
 
 def writeData(name, city):
@@ -60,55 +48,33 @@ def writeData(name, city):
         curFilename += str(shortName) + ".csv"
         ensureDir(curFilename)
         f = open(curFilename, 'a')
-        if name == "cur_aqi":
-            f.write(city['dateTime'].strftime("%Y%m%d%H%M") + ",")
-        else:
-            f.write(city['dateTimeUpdated'].strftime("%Y%m%d%H%M") + ",")
+        f.write(city['dateTime'].strftime("%Y%m%d%H%M") + ",")
         f.write(str(city['g'][0]) + ",")
         f.write(str(city['g'][1]) + ",")
         f.write(str(city['data'][name]) + "\n")
         f.close()
-#@profile
+
 def handleCity(i, city, cities):
     try:
+        city = getUpdatedCity(city);
         print("\n\nScraping "+ city["city"] , i+1, "of",len(cities), city["g"], city["x"])
-        city['dateTime'] = getTime(city['utime'], str(city['g'][1]))
+        city['dateTime'] = getTime(city)
         #Get the details url from the popup
-        city["popupURL"]=("http://aqicn.info/json/mapinfo/@" + str(city["x"]))
+        city["popupURL"]=("http://aqicn.org/aqicn/json/mapinfo/@" + str(city["x"]))
 
         print("Popup url is:", city["popupURL"])
 
         cityDetailPage = requests.get(city["popupURL"]).text
-        city["detailURL"] = re.search("http://aqicn\.info/[^\']*", cityDetailPage)
-
-        print("City Detail url is:", city["detailURL"])
+        city["detailURL"] = re.search("http://aqicn\.org/[^\']*", cityDetailPage)
 
         if city["detailURL"]:
-            #Load the detail page and get the redirect page
-            city["detailURL"] = city["detailURL"].group(0).replace("info", "org", 1)
-
-            print("City Detail url is now:", city["detailURL"])
-            headers = {
-                    'User-agent': 'Mozilla/5.0'
-            }
-
-            page = requests.get(city["detailURL"],allow_redirects=False, headers=headers)
-
-            #Attempt to get the redirect page. If that fails we will assume the page the did not redirect and scrapte the url
-            if page.headers.get('location'):
-                print("Redirecting to:", page.headers.get('location'));
-                page = requests.get(page.headers.get('location'),allow_redirects=True, headers=headers)
-            else:
-                soup = BeautifulSoup(page.text)
-                titleLink = soup.find(id="aqiwgttitle1")
-                if titleLink:
-                    page = requests.get(titleLink['href'] + "m",allow_redirects=True, headers=headers)
+            city["detailURL"] = city["detailURL"].group(0)
+            print("City Detail url is:", city["detailURL"])
+            page = requests.get(city["detailURL"])
 
             soup = BeautifulSoup(page.text)
             city["data"] = {}
 
-            newTime = re.search( "(?<=Updated on ).*$",soup.find(text=re.compile("(?<=Updated on ).*?"))).group(0)
-            city['dateTimeUpdated'] = getTime(newTime, str(city['g'][1]))
             curList = soup.find_all("td", {"id" : re.compile('^cur_')})
             #Go on to the next city if we don't find anything
             if not curList:
@@ -131,23 +97,28 @@ def handleCity(i, city, cities):
             del curList
             cities[i] = None
             gc.collect()
-
-
         else:
             print('Not found')
     except KeyboardInterrupt:
         sys.exit()
     except:
-
         print(city["city"], "encountered an error:", traceback.format_exc() )
 
+def getUpdatedCity(city):
+    cities = getCities()
+    for c in cities:
+        if c["x"] == city["x"]:
+            print("Matched cities for time update")
+            print("Old", city)
+            print("New", c)
+            if c["city"] != city["city"]:
+                print("Whoops")
+            return c
 
 def getCities():
     #First we must get the main map page
-    print("Getting the main page")
+    print("Getting the cities")
     fullMap = requests.get("http://aqicn.org/map/world/").text
-    #fullMap = urllib.request.urlopen("http://aqicn.org/map/world/")
-    #fullMap = fullMap.read().decode("utf-8")
 
     #Find the json embedded in the main page
     print("Finding the json")
@@ -157,15 +128,25 @@ def getCities():
     cities = None
     if fullMapJsonString:
         cities = json.loads(fullMapJsonString.group(0))
+    return cities
 
-    #Loop through the cities and load each one
-    print("There are" ,len(cities) , "cities")
-    for i, city in enumerate(cities):
-        #if i%500 != 0:
-        #    continue
-        handleCity(i, city, cities)
+#helper function for searching, sorting cities
+def getX(city):
+    try:
+        return int(city["x"])
+    except:
+        print("Not a number", city)
+        return -99
 
 if __name__ == '__main__':
     print("Start" ,datetime.datetime.now())
-    getCities()
+    cities = getCities()
+    #Loop through the cities and load each one
+    print("There are" ,len(cities) , "cities")
+    for i, city in enumerate(cities):
+        try:
+            int(city["x"])
+        except:
+            continue
+        handleCity(i, city, cities)   
     print("End" ,datetime.datetime.now())
