@@ -28,13 +28,12 @@ def getTime(city):
     print("Stripping time:", utime, ",", long);
     utime = utime.strip()
     utime = re.sub(r"on |\.|-", "", utime)
-    utime = utime + " " + city["tz"]
-    print("Trying to parse time:", utime);
+    print("Trying to parse time:", utime + " " + city["tz"]);
     try:
-        cityTime = parse(utime).astimezone(tzutc());
+        cityTime = parse(utime + " " + city["tz"]).astimezone(tzutc());
     except:
         utime = re.sub(r"am$|pm$", "", utime)
-        cityTime = parse(utime).astimezone(tzutc());
+        cityTime = parse(utime + " " + city["tz"]).astimezone(tzutc());
 
     print("Time parsed as:", cityTime);
     return cityTime
