@@ -57,6 +57,8 @@ def handleCity(i, city, cities):
     try:
         print("\n\nScraping "+ city["city"] , i+1, "of",len(cities), city["g"], city["x"])
         city = getUpdatedCity(city);
+        if city == None:
+            return
         city['dateTime'] = getTime(city)
         #Get the details url from the popup
         city["popupURL"]=("http://aqicn.org/aqicn/json/mapinfo/@" + str(city["x"]))
@@ -71,7 +73,7 @@ def handleCity(i, city, cities):
             print("City Detail url is:", city["detailURL"])
             page = requests.get(city["detailURL"])
 
-            soup = BeautifulSoup(page.text)
+            soup = BeautifulSoup(page.text, "html.parser")
             city["data"] = {}
 
             curList = soup.find_all("td", {"id" : re.compile('^cur_')})
@@ -111,8 +113,10 @@ def getUpdatedCity(city):
             print("Old", city)
             print("New", c)
             if c["city"] != city["city"]:
-                print("Whoops")
+                print("Whoops city is not the same")
             return c
+    print("Whoops city not found")
+    return None
 
 def getCities():
     #First we must get the main map page
