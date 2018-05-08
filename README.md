@@ -1,10 +1,10 @@
 aqicn
 =====
-#####Scraper for aqicn.org
+##### Scraper for aqicn.org
 
-####Install
+#### Install
 
-#####OS X:
+##### OS X:
 
 1. Install from [Python 3.4](https://www.python.org/downloads/release/python-341/)
 2. Install the required libraries using pip (see below for libraries)
@@ -12,7 +12,7 @@ aqicn
 3. Setup the output directory inside the script
 4. run the script aqicn.py (you may need to chmod +x)
 
-#####Cent OS:
+##### Cent OS:
 * You must download and compile Python 3.4
 
 Follow this guide
@@ -34,9 +34,9 @@ sudo /usr/local/bin/pip3.4 install python-dateutil
 * run the script aqicn.py (you may need to chmod +x)
 * change the script to look use the python /usr/local/bin/python3.4 instaed of /usr/bin/python
 
-####Output
+#### Output
 
-#####Console
+##### Console
 It should look like this
 ```
 Getting the main page
@@ -47,7 +47,7 @@ Saved cur_pm25,cur_pm10,cur_o3,cur_no2,cur_so2,cur_co,aqi for city Weifang ()
 ```
 
 Errors will be printed as they occur. Sometimes unicode handling in Python has some issues.
-#####Files
+##### Files
 Files will be saved to
 
 [directory]/Data/AQICN/Variable/YYYY/MM/yyyymmdd-variable.csv
@@ -60,7 +60,7 @@ If you UnicodeException you made need to set the enviroment variable PYTHONIOENC
 
 ###Written in [Python 3.4](https://www.python.org/downloads/release/python-341/)
 
-####Libraries
+#### Libraries
 Uses [PyPi](https://pypi.python.org/pypi) Versions of
 
 * [Requests2.2.1:](http://docs.python-requests.org/en/latest/)
@@ -72,8 +72,8 @@ pip install python-dateutil
 
 Just run the command after the colon to install them with pip. pip is installed with Python 3.4
 
-###Developed in Eclipse
-####Eclipse Plugins
+### Developed in Eclipse
+#### Eclipse Plugins
 
 * [PyDev](http://pydev.org/)
 * [Markdown Editor](http://www.winterwell.com/software/markdown-editor.php)
