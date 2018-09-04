@@ -54,11 +54,11 @@ Files will be saved to
 
 You can change the base [directory] by editing the script. It is defaulted to "./"
 
-####Troubleshooting
+#### Troubleshooting
 
 If you UnicodeException you made need to set the enviroment variable PYTHONIOENCODING to utf-8
 
-###Written in [Python 3.4](https://www.python.org/downloads/release/python-341/)
+### Written in [Python 3.4](https://www.python.org/downloads/release/python-341/)
 
 #### Libraries
 Uses [PyPi](https://pypi.python.org/pypi) Versions of
